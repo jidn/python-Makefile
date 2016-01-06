@@ -1,35 +1,22 @@
-# PYTHON PROJECT MAKEFILE
 # This helps with creating local virtual environments, requirements,
 # syntax checking, running tests, coverage and uploading packages to PyPI.
+# Homepage at https://github.com/jidn/python-Makefile
 # 
 # This also works with Travis CI
-# For more information on creating packages for PyPI see the writeup at
-# http://peterdowns.com/posts/first-time-with-pypi.html
 #
-.PHONY: help
-help:
-	@echo "env     Create virtualenv and install requirements"
-	@echo "check   Run style checks"
-	@echo "test    Run tests"
-	@echo "pdb     Run tests, but stop at the first unhandled exception."
-	@echo "upload  Upload package to PyPI"
-	@echo "clean clean-all  Clean up and clean up removing virtualenv"
-##############################################################################
-PROJECT := Example
-PACKAGE := example.py
+PROJECT :=
+PACKAGE :=
 # Replace 'requirements.txt' with another filename if needed.
 REQUIREMENTS := $(wildcard requirements.txt)
 # Directory with all the tests
-TESTDIR := test
+TESTDIR := tests
 TESTREQUIREMENTS := $(wildcard $(TESTDIR)/requirements.txt)
 ##############################################################################
 # Python settings
 ifdef TRAVIS
 	ENV = $(VIRTUAL_ENV)
 else
-	# The python version settings to use.  Minor is optional.
-	PYTHON_MAJOR := 3
-	PYTHON_MINOR := 5
+	PYTHON_VERSION := 
 	ENV := env
 endif
 
@@ -37,10 +24,7 @@ endif
 BIN := $(ENV)/bin
 OPEN := xdg-open
 SYS_VIRTUALENV := virtualenv
-SYS_PYTHON := python$(PYTHON_MAJOR)
-ifdef PYTHON_MINOR
-	SYS_PYTHON := $(SYS_PYTHON).$(PYTHON_MINOR)
-endif
+SYS_PYTHON := python$(PYTHON_VERSION)
 
 # virtualenv executables
 PIP := $(BIN)/pip
@@ -62,15 +46,21 @@ ALL := $(ENV)/.all
 DEPENDS_CI := $(ENV)/.depends-ci
 DEPENDS_DEV := $(ENV)/.depends-dev
 # Main Targets ###############################################################
-.PHONY: all env
+.PHONY: all env ci help
 all: env $(ALL)
 $(ALL): $(SOURCES)
-	$(MAKE) check
-	@touch $@  # flag to indicate all setup steps were successful
 
-# Targets to run on Travis
-.PHONY: ci
+# Target for Travis
 ci: test
+
+help:
+	@echo "env        Create virtualenv and install requirements"
+	@echo "check      Run style checks"
+	@echo "test       Run tests"
+	@echo "pdb        Run tests, but stop at the first unhandled exception."
+	@echo "coverage   Get coverage information."
+	@echo "upload     Upload package to PyPI."
+	@echo "clean clean-all  Clean up and clean up removing virtualenv."
 
 # Environment Installation ###################################################
 env: $(PIP) $(ENV)/.requirements $(ENV)/.setup.py
@@ -162,6 +152,8 @@ clean-all: clean clean-env
 	@rm -rf dist build
 
 # Release ####################################################################
+# For more information on creating packages for PyPI see the writeup at
+# http://peterdowns.com/posts/first-time-with-pypi.html
 .PHONY: authors register dist upload .git-no-changes
 
 authors:
@@ -194,10 +186,10 @@ upload: .git-no-changes register
 # Is this section really needed?
 
 develop:
-	$(SYS_PYTHON) setup.py develop
+	$(PYTHON) setup.py develop
 
 install:
-	$(SYS_PYTHON) setup.py install
+	$(PYTHON) setup.py install
 
 download:
 	$(PIP) install $(PROJECT)
