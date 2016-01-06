@@ -49,6 +49,8 @@ DEPENDS_DEV := $(ENV)/.depends-dev
 .PHONY: all env ci help
 all: env $(ALL)
 $(ALL): $(SOURCES)
+	$(MAKE) check
+	@touch $@
 
 # Target for Travis
 ci: test
