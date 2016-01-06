@@ -36,8 +36,7 @@ TESTRUN := $(BIN)/py.test
 
 # Project settings
 SETUP_PY := $(wildcard setup.py)
-SOURCES := Makefile $(SETUP_PY) \
-	       $(shell find $(PACKAGE) -name '*.py')
+SOURCES := $(shell find $(PACKAGE) -name '*.py')
 TESTS :=   $(shell find $(TESTDIR) -name '*.py')
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
@@ -48,7 +47,7 @@ DEPENDS_DEV := $(ENV)/.depends-dev
 # Main Targets ###############################################################
 .PHONY: all env ci help
 all: env $(ALL)
-$(ALL): $(SOURCES)
+$(ALL): Makefile $(SETUP_PY) $(SOURCES)
 	$(MAKE) check
 	@touch $@
 
@@ -74,7 +73,7 @@ $(PIP):
 $(ENV)/.requirements: $(REQUIREMENTS)
 ifneq ($(REQUIREMENTS),)
 	$(PIP) install --upgrade -r requirements.txt
-	@echo "Upgrade or install requirements.txt complete."
+	$(info Upgrade or install requirements.txt complete.)
 endif
 	@touch $@
 
@@ -99,10 +98,10 @@ $(DEPENDS_DEV): env
 	@touch $@  # flag to indicate dependencies are installed
 
 flake8: $(DEPENDS_CI)
-	$(FLAKE8) $(PACKAGE) $(TESTDIR) --ignore=$(PEP8_IGNORED)
+	$(FLAKE8) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --ignore=$(PEP8_IGNORED)
 
 pep257: $(DEPENDS_CI)
-	$(PEP257) $(PACKAGE) $(TESTDIR) --ignore=$(PEP8_IGNORED)
+	$(PEP257) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --ignore=$(PEP8_IGNORED)
 
 ### Testing ##################################################################
 .PHONY: test pdb coverage
