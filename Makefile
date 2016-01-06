@@ -6,20 +6,22 @@
 # For more information on creating packages for PyPI see the writeup at
 # http://peterdowns.com/posts/first-time-with-pypi.html
 #
-.PHONY help
+.PHONY: help
 help:
-	@echo "env  Create virtual environment and install requirements"
-	@echo "test  Run tests"
-	@echo "pdb   Run tests, but stop at the first unhandled exception."
-	@echo "check  Run style checks"
+	@echo "env     Create virtualenv and install requirements"
+	@echo "check   Run style checks"
+	@echo "test    Run tests"
+	@echo "pdb     Run tests, but stop at the first unhandled exception."
 	@echo "upload  Upload package to PyPI"
+	@echo "clean clean-all  Clean up and clean up removing virtualenv"
 ##############################################################################
-PROJECT := Flask-RESTeasy
-PACKAGE := flask_resteasy.py
-REQUIREMENTS := requirements.txt
+PROJECT := Example
+PACKAGE := example.py
+# Replace 'requirements.txt' with another filename if needed.
+REQUIREMENTS := $(wildcard requirements.txt)
 # Directory with all the tests
-TESTDIR := tests
-TESTREQUIREMENTS := $(TESTDIR)/$(REQUIREMENTS)
+TESTDIR := test
+TESTREQUIREMENTS := $(wildcard $(TESTDIR)/requirements.txt)
 ##############################################################################
 # Python settings
 ifdef TRAVIS
@@ -32,33 +34,12 @@ else
 endif
 
 # System paths
-# I haven't developed for windows for a long time, mileage may vary.
-PLATFORM := $(shell python -c 'import sys; print(sys.platform)')
-ifneq ($(findstring win32, $(PLATFORM)), )
-	SYS_PYTHON_DIR := C:\\Python$(PYTHON_MAJOR)$(PYTHON_MINOR)
-	SYS_PYTHON := $(SYS_PYTHON_DIR)\\python.exe
-	SYS_VIRTUALENV := $(SYS_PYTHON_DIR)\\Scripts\\virtualenv.exe
-	# https://bugs.launchpad.net/virtualenv/+bug/449537
-	export TCL_LIBRARY=$(SYS_PYTHON_DIR)\\tcl\\tcl8.5
-else
-	SYS_PYTHON := python$(PYTHON_MAJOR)
-	ifdef PYTHON_MINOR
-		SYS_PYTHON := $(SYS_PYTHON).$(PYTHON_MINOR)
-	endif
-	SYS_VIRTUALENV := virtualenv
-endif
-
-# virtualenv paths
-ifneq ($(findstring win32, $(PLATFORM)), )
-	BIN := $(ENV)/Scripts
-	OPEN := cmd /c start
-else
-	BIN := $(ENV)/bin
-	ifneq ($(findstring cygwin, $(PLATFORM)), )
-		OPEN := cygstart
-	else
-		OPEN := xdg-open
-	endif
+BIN := $(ENV)/bin
+OPEN := xdg-open
+SYS_VIRTUALENV := virtualenv
+SYS_PYTHON := python$(PYTHON_MAJOR)
+ifdef PYTHON_MINOR
+	SYS_PYTHON := $(SYS_PYTHON).$(PYTHON_MINOR)
 endif
 
 # virtualenv executables
@@ -70,7 +51,8 @@ COVERAGE := $(BIN)/coverage
 TESTRUN := $(BIN)/py.test
 
 # Project settings
-SOURCES := Makefile setup.py \
+SETUP_PY := $(wildcard setup.py)
+SOURCES := Makefile $(SETUP_PY) \
 	       $(shell find $(PACKAGE) -name '*.py')
 TESTS :=   $(shell find $(TESTDIR) -name '*.py')
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
@@ -79,30 +61,36 @@ EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 ALL := $(ENV)/.all
 DEPENDS_CI := $(ENV)/.depends-ci
 DEPENDS_DEV := $(ENV)/.depends-dev
-DEPENDS_TEST := $(ENV)/.depends-test
 # Main Targets ###############################################################
 .PHONY: all env
 all: env $(ALL)
 $(ALL): $(SOURCES)
 	$(MAKE) check
-	@touch $(ALL)  # flag to indicate all setup steps were successful
+	@touch $@  # flag to indicate all setup steps were successful
 
 # Targets to run on Travis
 .PHONY: ci
 ci: test
 
 # Environment Installation ###################################################
-env: $(PIP) requirements.txt $(EGG_INFO)
+env: $(PIP) $(ENV)/.requirements $(ENV)/.setup.py
 $(PIP):
 	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
+	@$(MAKE) -s $(ENV)/.requirements
+	@$(MAKE) -s $(ENV)/.setup.py
 
-requirements.txt:
+$(ENV)/.requirements: $(REQUIREMENTS)
+ifneq ($(REQUIREMENTS),)
 	$(PIP) install --upgrade -r requirements.txt
 	@echo "Upgrade or install requirements.txt complete."
+endif
+	@touch $@
 
-$(EGG_INFO): setup.py
+$(ENV)/.setup.py: $(SETUP_PY)
+ifneq ($(SETUP_PY),)
 	$(PIP) install -e .
-	@touch $(EGG_INFO)  # flag to indicate package is installed
+endif
+	@touch $@
 
 ### Static Analysis & Travis CI ##############################################
 .PHONY: check flake8 pep257
@@ -112,11 +100,11 @@ check: flake8 pep257
 
 $(DEPENDS_CI): env $(TESTREQUIREMENTS)
 	$(PIP) install --upgrade flake8 pep257
-	@touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
+	@touch $@  # flag to indicate dependencies are installed
 
 $(DEPENDS_DEV): env
 	$(PIP) install --upgrade wheel  # pygments wheel
-	@touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
+	@touch $@  # flag to indicate dependencies are installed
 
 flake8: $(DEPENDS_CI)
 	$(FLAKE8) $(PACKAGE) $(TESTDIR) --ignore=$(PEP8_IGNORED)
@@ -131,16 +119,18 @@ TESTRUN_OPTS := --cov $(PACKAGE) \
 			   --cov-report term-missing \
 			   --cov-report html 
 
-test: env $(DEPENDS_CI) $(TESTS) $(DEPENDS_TEST)
+test: env $(DEPENDS_CI) $(TESTS) $(ENV)/requirements-test
 	$(TESTRUN) $(TESTDIR)/*.py $(TESTRUN_OPTS)
 
-pdb: env $(DEPENDS_CI) $(TEST) $(DEPENDS_TEST)
+pdb: env $(DEPENDS_CI) $(TEST) $(ENV)/requirements-test
 	$(TESTRUN) $(TESTDIR)/*.py $(TESTRUN_OPTS) -x --pdb
 
-$(DEPENDS_TEST): $(TESTREQUIREMENTS)
+$(ENV)/requirements-test: $(TESTREQUIREMENTS)
+ifneq ($(TESTREQUIREMENTS),)
 	$(PIP) install --upgrade -r $(TESTREQUIREMENTS)
-	@touch $(DEPENDS_TEST)
 	@echo "Testing requirements installed."
+endif
+	@touch $@
 
 coverage: test
 	$(COVERAGE) html
@@ -150,25 +140,26 @@ coverage: test
 .PHONY: clean clean-env clean-all .clean-build .clean-test .clean-dist
 
 clean: .clean-dist .clean-test .clean-build
-	rm -rf $(ALL)
+	@rm -rf $(ALL)
 
 clean-env: clean
-	rm -rf $(ENV)
+	@rm -rf $(ENV)
 
 clean-all: clean clean-env
 
 .clean-build:
-	find tests -name '*.pyc' -delete
-	find -name $(PACKAGE).c -delete
-	find tests -name '__pycache__' -delete
-	rm -rf $(EGG_INFO)
+#	@find -name $(PACKAGE).c -delete
+	@find $(TESTDIR) -name '*.pyc' -delete
+	@find $(TESTDIR) -name '__pycache__' -delete
+	@rm -rf $(EGG_INFO)
+	@rm -rf __pycache__
 
 .clean-test:
-	rm -rf .coverage
-#	rm -f *.log
+	@rm -rf .coverage
+#	@rm -f *.log
 
 .clean-dist:
-	rm -rf dist build
+	@rm -rf dist build
 
 # Release ####################################################################
 .PHONY: authors register dist upload .git-no-changes
