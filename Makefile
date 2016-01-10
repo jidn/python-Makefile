@@ -41,13 +41,13 @@ TESTS :=   $(shell find $(TESTDIR) -name '*.py')
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
 # Flags for environment/tools
-ALL := $(ENV)/.all
 DEPENDS_CI := $(ENV)/.depends-ci
 DEPENDS_DEV := $(ENV)/.depends-dev
+
 # Main Targets ###############################################################
 .PHONY: all env ci help
-all: env $(ALL)
-$(ALL): Makefile $(SETUP_PY) $(SOURCES)
+all: $(ENV)/.default-target
+$(ENV)/.default-target: env Makefile $(SETUP_PY) $(SOURCES)
 	$(MAKE) check
 	@touch $@
 
@@ -72,8 +72,9 @@ $(PIP):
 
 $(ENV)/.requirements: $(REQUIREMENTS)
 ifneq ($(REQUIREMENTS),)
-	$(PIP) install --upgrade -r requirements.txt
-	$(info Upgrade or install requirements.txt complete.)
+	$(PIP) install --upgrade -r $(REQUIREMENTS)
+	# env requirements hook
+	$(info Upgrade or install $(REQUIREMENTS) complete.)
 endif
 	@touch $@
 
