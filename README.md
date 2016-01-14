@@ -2,7 +2,13 @@ In the attempt to create and use a standard Makefile for my python projects, thi
 
 Travis CI is also supported, see the  `travis.yml`, but remember to change the name of the file as required to `.travis.yml` (adding a leading dot) for proper Travis CI working.
 
-Copy this file and make the following changes:
+Copy this file
+
+```
+curl https://raw.githubusercontent.com/jidn/python-Makefile/master/Makefile > Makefile
+```
+
+and make the following changes:
 
  * PROJECT := MyProject
  * PACKAGE := myproject/  or myproject.py
