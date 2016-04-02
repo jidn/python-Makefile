@@ -7,10 +7,10 @@
 PROJECT :=
 PACKAGE :=
 # Replace 'requirements.txt' with another filename if needed.
-REQUIREMENTS := $(wildcard requirements.txt)
+REQUIRE_TXT := $(wildcard requirements.txt)
 # Directory with all the tests
 TESTDIR := tests
-TESTREQUIREMENTS := $(wildcard $(TESTDIR)/requirements.txt)
+TESTREQ_TXT := $(wildcard $(TESTDIR)/requirements.txt)
 ##############################################################################
 # Python settings
 ifdef TRAVIS
@@ -41,14 +41,16 @@ TESTS :=   $(shell find $(TESTDIR) -name '*.py')
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
 # Flags for environment/tools
-DEPENDS_CI := $(ENV)/.depends-ci
-DEPENDS_DEV := $(ENV)/.depends-dev
+FLAG_CI := $(ENV)/.depends-ci
+FLAG_DEV := $(ENV)/.depends-dev
+LOG_REQ := $(ENV)/.requirements.txt
+LOG_TEST_REQ := $(ENV)/.requirements-test.txt
 
 # Main Targets ###############################################################
 .PHONY: all env ci help
 all: $(ENV)/.default-target
-$(ENV)/.default-target: env Makefile $(SETUP_PY) $(SOURCES)
-	$(MAKE) check
+$(ENV)/.default-target: env $(SETUP_PY) $(SOURCES)
+	$(MAKE) -s test
 	@touch $@
 
 # Target for Travis
@@ -57,24 +59,23 @@ ci: test
 help:
 	@echo "env        Create virtualenv and install requirements"
 	@echo "check      Run style checks"
-	@echo "test       Run tests"
-	@echo "pdb        Run tests, but stop at the first unhandled exception."
-	@echo "coverage   Get coverage information."
-	@echo "upload     Upload package to PyPI."
-	@echo "clean clean-all  Clean up and clean up removing virtualenv."
+	@echo "test *     Run py.test with arguments on '$(TESTDIR)'"
+	@echo "pytest *   Run py.test -x --pdb with arguments on '$(TESTDIR)'"
+	@echo "coverage   Get coverage information"
+	@echo "upload     Upload package to PyPI"
+	@echo "clean clean-all  Clean up and clean up removing virtualenv"
 
 # Environment Installation ###################################################
-env: $(PIP) $(ENV)/.requirements $(ENV)/.setup.py
+env: $(PIP) $(LOG_REQ) $(ENV)/.setup.py
 $(PIP):
 	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
-	@$(MAKE) -s $(ENV)/.requirements
 	@$(MAKE) -s $(ENV)/.setup.py
 
-$(ENV)/.requirements: $(REQUIREMENTS)
-ifneq ($(REQUIREMENTS),)
-	$(PIP) install --upgrade -r $(REQUIREMENTS)
+$(LOG_REQ): $(REQUIRE_TXT)
+ifneq ($(REQUIRE_TXT),)
+	$(PIP) install --upgrade -r $(REQUIRE_TXT) | tee -a $(LOG_REQ)
 	# env requirements hook
-	$(info Upgrade or install $(REQUIREMENTS) complete.)
+	$(info Upgrade or install $(REQUIRE_TXT) complete.)
 endif
 	@touch $@
 
@@ -90,41 +91,43 @@ endif
 PEP8_IGNORED := E501,E123,D104,D203
 check: flake8 pep257
 
-$(DEPENDS_CI): env $(TESTREQUIREMENTS)
+$(FLAG_CI): env
 	$(PIP) install --upgrade flake8 pep257
 	@touch $@  # flag to indicate dependencies are installed
 
-$(DEPENDS_DEV): env
+$(FLAG_DEV): env
 	$(PIP) install --upgrade wheel  # pygments wheel
 	@touch $@  # flag to indicate dependencies are installed
 
-flake8: $(DEPENDS_CI)
+flake8: $(FLAG_CI)
 	$(FLAKE8) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --ignore=$(PEP8_IGNORED)
 
-pep257: $(DEPENDS_CI)
+pep257: $(FLAG_CI)
 	$(PEP257) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --ignore=$(PEP8_IGNORED)
 
 ### Testing ##################################################################
 .PHONY: test pdb coverage
 
-TESTRUN_OPTS := --cov $(PACKAGE) \
-			   --cov-report term-missing \
-			   --cov-report html 
+TEST_COVERAGE := --cov $(PACKAGE) \
+				 --cov-report term-missing \
+				 --cov-report html 
 
-test: env $(DEPENDS_CI) $(TESTS) $(ENV)/requirements-test
-	$(TESTRUN) $(TESTDIR)/*.py $(TESTRUN_OPTS)
+pytest: env $(LOG_TEST_REQ)
+	$(TESTRUN) $(TESTDIR) -x --pdb $(filter-out, $@,$(MAKECMDGOALS))
 
-pdb: env $(DEPENDS_CI) $(TEST) $(ENV)/requirements-test
-	$(TESTRUN) $(TESTDIR)/*.py $(TESTRUN_OPTS) -x --pdb
+test: env $(LOG_TEST_REQ)
+	@$(MAKE) -s .clean-test
+	$(TESTRUN) $(TESTDIR) --last-failed $(filter-out, $@,$(MAKECMDGOALS))
 
-$(ENV)/requirements-test: $(TESTREQUIREMENTS)
-ifneq ($(TESTREQUIREMENTS),)
-	$(PIP) install --upgrade -r $(TESTREQUIREMENTS)
+$(LOG_TEST_REQ): $(TESTREQ_TXT)
+ifneq ($(TESTREQ_TXT),)
+	$(PIP) install --upgrade -r $(TESTREQ_TXT) | tee -a $(LOG_TEST_REQ)
 	@echo "Testing requirements installed."
 endif
 	@touch $@
 
-coverage: test
+coverage:
+	@$(MAKE) test $(TEST_COVERAGE)
 	$(COVERAGE) html
 	$(OPEN) htmlcov/index.html
 
@@ -141,14 +144,15 @@ clean-all: clean clean-env
 
 .clean-build:
 #	@find -name $(PACKAGE).c -delete
+	@find $(PACKAGE) -name '*.pyc' -delete
 	@find $(TESTDIR) -name '*.pyc' -delete
+	@find $(PACKAGE) -name '__pycache__' -delete
 	@find $(TESTDIR) -name '__pycache__' -delete
 	@rm -rf $(EGG_INFO)
 	@rm -rf __pycache__
 
 .clean-test:
 	@rm -rf .coverage
-#	@rm -f *.log
 
 .clean-dist:
 	@rm -rf dist build
