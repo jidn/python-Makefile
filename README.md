@@ -12,9 +12,9 @@ and make the following changes:
 
  * PROJECT := MyProject
  * PACKAGE := myproject/  or myproject.py
- * REQUIREMENTS := The file with required packages. Defaults to requirements.txt
+ * REQUIRE_TXT := The file with required packages. Defaults to requirements.txt
  * TESTDIR := Default is current directory 'tests'
- * TESTREQUIREMENTS := Required packages needed to run tests. Defaults to TESTDIR/REQUIREMENTS.  If you use a path in REQUIREMENTS, the you should remove the REQUIREMENTS as part of this definition and just enter the file name.
+ * TESTREQ_TXT := Required packages needed to run tests. Defaults to TESTDIR/requirements.
  * PYTHON_VERSION := The version of python interpreter to use. Defaults to
    the current `python` interpretor.  When you give is appended to 'python'.
    Use '2' for `python2`, '2.7' for `python2.7` or '3.4' for `python3.4`.
@@ -28,9 +28,11 @@ Create the virtual environment in `env` directory within the current directory. 
 Check for code and tests for using flake8 and for proper docstring
 
 ### test
-Run all the tests in TESTDIR.  By default, I am using pytest, but you can fix this by changing TESTRUN and TESTRUN_OPTS.
+Run all the tests in TESTDIR.  By default, I am using pytest, but you can fix this by changing TESTRUN.
 
-There is also a `pdb` target to run tests and break at an unhandled exception.
+There is also a `pytest` target to run tests and break at an unhandled exception.
+
+`added 2016-04-01` You may also give command-line arguments which are pass to TESTRUN. This also works for the target `pytest`
 
 ### clean clean-all
 The target clean removes everything but environment and clean-all removes the environment.
