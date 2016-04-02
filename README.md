@@ -32,7 +32,11 @@ Run all the tests in TESTDIR.  By default, I am using pytest, but you can fix th
 
 There is also a `pytest` target to run tests and break at an unhandled exception.
 
-`added 2016-04-01` You may also give command-line arguments which are pass to TESTRUN. This also works for the target `pytest`
+`added 2016-04-01` You may also give command-line arguments which are pass to TESTRUN. Just follow the target with `--`.
+This also works for the `pytest` target.
+
+Example: See each test on its own line.
+    make test -- -v
 
 ### clean clean-all
 The target clean removes everything but environment and clean-all removes the environment.

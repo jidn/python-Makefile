@@ -113,11 +113,11 @@ TEST_COVERAGE := --cov $(PACKAGE) \
 				 --cov-report html 
 
 pytest: env $(LOG_TEST_REQ)
-	$(TESTRUN) $(TESTDIR) -x --pdb $(filter-out, $@,$(MAKECMDGOALS))
+	$(TESTRUN) $(TESTDIR) -x --pdb $(filter-out $@,$(MAKECMDGOALS))
 
 test: env $(LOG_TEST_REQ)
 	@$(MAKE) -s .clean-test
-	$(TESTRUN) $(TESTDIR) --last-failed $(filter-out, $@,$(MAKECMDGOALS))
+	$(TESTRUN) $(TESTDIR) --last-failed $(filter-out $@,$(MAKECMDGOALS))
 
 $(LOG_TEST_REQ): $(TESTREQ_TXT)
 ifneq ($(TESTREQ_TXT),)
