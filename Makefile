@@ -135,10 +135,10 @@ coverage:
 .PHONY: clean clean-env clean-all .clean-build .clean-test .clean-dist
 
 clean: .clean-dist .clean-test .clean-build
-	@rm -rf $(ALL)
+	-@rm -rf $(ALL)
 
 clean-env: clean
-	@rm -rf $(ENV)
+	-@rm -rf $(ENV)
 
 clean-all: clean clean-env
 
