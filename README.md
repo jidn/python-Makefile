@@ -25,8 +25,8 @@ You can specify the python interpreter version by adding python=PYTHON_EXE on th
 
 Examples:
 ``` bash
-    make env python=python2.7
-    make env python=python3.4m
+    $ make env python=python2.7
+    $ make env python=python3.4m
 ```
 
 ### check
@@ -39,8 +39,8 @@ You can also pass arguments to your TEST_RUNNER by adding `args=" ... "` on the 
 
 Examples:
 ``` bash
-    make test args="-v"
-    make test args="-x --pdb --ff"
+    $ make test args="-v"
+    $ make test args="-x --pdb --ff"
 ```
 
 ### clean clean-all
