@@ -32,7 +32,7 @@ PYTHON := $(BIN)/python
 FLAKE8 := $(BIN)/flake8
 PEP257 := $(BIN)/pep257
 COVERAGE := $(BIN)/coverage
-TESTRUN := $(BIN)/py.test
+TEST_RUNNER := $(BIN)/py.test
 
 # Project settings
 SETUP_PY := $(wildcard setup.py)
@@ -57,12 +57,11 @@ $(ENV)/.default-target: env $(SETUP_PY) $(SOURCES)
 ci: test
 
 help:
-	@echo "env        Create virtualenv and install requirements"
-	@echo "check      Run style checks"
-	@echo "test *     Run py.test with arguments on '$(TESTDIR)'"
-	@echo "pytest *   Run py.test -x --pdb with arguments on '$(TESTDIR)'"
-	@echo "coverage   Get coverage information"
-	@echo "upload     Upload package to PyPI"
+	@echo "env           Create virtualenv and install requirements"
+	@echo "check         Run style checks"
+	@echo "test args=\" \" TEST_RUNNER with option arguments on '$(TESTDIR)'"
+	@echo "coverage      Get coverage information"
+	@echo "upload        Upload package to PyPI"
 	@echo "clean clean-all  Clean up and clean up removing virtualenv"
 
 # Environment Installation ###################################################
@@ -106,18 +105,15 @@ pep257: $(FLAG_CI)
 	$(PEP257) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --ignore=$(PEP8_IGNORED)
 
 ### Testing ##################################################################
-.PHONY: test pdb coverage
+.PHONY: test coverage
 
-TEST_COVERAGE := --cov $(PACKAGE) \
-				 --cov-report term-missing \
-				 --cov-report html 
-
-pytest: env $(LOG_TEST_REQ)
-	$(TESTRUN) $(TESTDIR) -x --pdb $(filter-out $@,$(MAKECMDGOALS))
+COVERAGE := --cov $(PACKAGE) \
+			 --cov-report term-missing \
+			 --cov-report html
 
 test: env $(LOG_TEST_REQ)
 	@$(MAKE) -s .clean-test
-	$(TESTRUN) $(TESTDIR) --last-failed $(filter-out $@,$(MAKECMDGOALS))
+	$(TEST_RUNNER) $(TESTDIR) $(args)
 
 $(LOG_TEST_REQ): $(TESTREQ_TXT)
 ifneq ($(TESTREQ_TXT),)
@@ -127,7 +123,7 @@ endif
 	@touch $@
 
 coverage:
-	@$(MAKE) test $(TEST_COVERAGE)
+	$(TEST_RUNNER) $(args) $(TESTDIR) $(COVERAGE)
 	$(COVERAGE) html
 	$(OPEN) htmlcov/index.html
 
