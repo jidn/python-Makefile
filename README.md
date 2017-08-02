@@ -14,29 +14,34 @@ and make the following changes:
  * PACKAGE := myproject/  or myproject.py
  * REQUIRE_TXT := The file with required packages. Defaults to requirements.txt
  * TESTDIR := Default is current directory 'tests'
- * TESTREQ_TXT := Required packages needed to run tests. Defaults to TESTDIR/requirements.
- * PYTHON_VERSION := The version of python interpreter to use. Defaults to
-   the current `python` interpretor.  When you give is appended to 'python'.
-   Use '2' for `python2`, '2.7' for `python2.7` or '3.4' for `python3.4`.
+ * TESTREQ_TXT := Required packages needed to run tests. Defaults to TESTDIR/requirements-test.txt
 
 ## Targets
 
 ### env
 Create the virtual environment in `env` directory within the current directory.  No stomping on other virtual environments in some global directory.  Lets keep everything local to make environment debugging easier.  This is also were all the requirements are installed.
 
+You can specify the python interpreter version by adding python=PYTHON_EXE on the command-line.  This defaults to the current python interpreter.
+
+Examples:
+``` bash
+    make env python=python2.7
+    make env python=python3.4m
+```
+
 ### check
 Check for code and tests for using flake8 and for proper docstring
 
 ### test
-Run all the tests in TESTDIR.  By default, I am using pytest, but you can fix this by changing TESTRUN.
+Run all the tests in TESTDIR.  By default, I am using pytest, but you can fix this by changing TEST_RUNNER.
 
-There is also a `pytest` target to run tests and break at an unhandled exception.
+You can also pass arguments to your TEST_RUNNER by adding `args=" ... "` on the command line.
 
-`added 2016-04-01` You may also give command-line arguments which are pass to TESTRUN. Just follow the target with `--`.
-This also works for the `pytest` target.
-
-Example: See each test on its own line.
-    make test -- -v
+Examples:
+``` bash
+    make test args="-v"
+    make test args="-x --pdb --ff"
+```
 
 ### clean clean-all
 The target clean removes everything but environment and clean-all removes the environment.
