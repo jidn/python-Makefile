@@ -16,19 +16,18 @@ TESTREQ_TXT := $(wildcard $(TESTDIR)/requirements.txt)
 ifdef TRAVIS
 	ENV = $(VIRTUAL_ENV)
 else
-	PYTHON_VERSION := 
 	ENV := env
 endif
-
+# default if not given on command line
+python = python
 # System paths
 BIN := $(ENV)/bin
 OPEN := xdg-open
 SYS_VIRTUALENV := virtualenv
-SYS_PYTHON := python$(PYTHON_VERSION)
 
 # virtualenv executables
 PIP := $(BIN)/pip
-PYTHON := $(BIN)/python
+PYTHON := $(BIN)/$(python)
 FLAKE8 := $(BIN)/flake8
 PEP257 := $(BIN)/pep257
 COVERAGE := $(BIN)/coverage
@@ -57,17 +56,19 @@ $(ENV)/.default-target: env $(SETUP_PY) $(SOURCES)
 ci: test
 
 help:
-	@echo "env           Create virtualenv and install requirements"
-	@echo "check         Run style checks"
-	@echo "test args=\" \" TEST_RUNNER with option arguments on '$(TESTDIR)'"
-	@echo "coverage      Get coverage information"
-	@echo "upload        Upload package to PyPI"
+	@echo "env        Create virtualenv and install requirements"
+	@echo "             python=PYTHON_EXE   interpreter to use, default=python"
+	@echo "check      Run style checks"
+	@echo "test       TEST_RUNNER on '$(TESTDIR)'"
+	@echo "             args=\"-x --pdb --ff\"  optional arguments"
+	@echo "coverage   Get coverage information"
+	@echo "upload     Upload package to PyPI"
 	@echo "clean clean-all  Clean up and clean up removing virtualenv"
 
 # Environment Installation ###################################################
 env: $(PIP) $(LOG_REQ) $(ENV)/.setup.py
 $(PIP):
-	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
+	$(SYS_VIRTUALENV) --python $(python) $(ENV)
 	@$(MAKE) -s $(ENV)/.setup.py
 
 $(LOG_REQ): $(REQUIRE_TXT)
