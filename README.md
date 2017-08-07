@@ -10,16 +10,15 @@ curl https://raw.githubusercontent.com/jidn/python-Makefile/master/Makefile > Ma
 
 and make the following changes:
 
- * PROJECT := MyProject
- * PACKAGE := myproject/  or myproject.py
- * REQUIRE_TXT := The file with required packages. Defaults to requirements.txt
- * TESTDIR := Default is current directory 'tests'
- * TESTREQ_TXT := Required packages needed to run tests. Defaults to TESTDIR/requirements-test.txt
+ * _PROJECT_ := MyProject
+ * _PACKAGE_ := myproject/  or myproject.py
+ * _REQUIRE_ := The file with required packages; defaults to requirements.txt
+ * _TESTDIR_ := Default is current directory 'tests'
 
 ## Targets
 
 ### env
-Create the virtual environment in `env` directory within the current directory.  No stomping on other virtual environments in some global directory.  Lets keep everything local to make environment debugging easier.  This is also were all the requirements are installed.
+Create the virtual environment in `.env` directory within the current directory.  No stomping on other virtual environments in some global directory.  Lets keep everything local to make environment debugging easier.  This is also where all the requirements are installed.
 
 You can specify the python interpreter version by adding python=PYTHON_EXE on the command-line.  This defaults to the current python interpreter.
 
@@ -30,7 +29,7 @@ Examples:
 ```
 
 ### check
-Check for code and tests for using flake8 and for proper docstring
+Static code analysis using flake8, ignoring the virtual environment and test directory.
 
 ### test
 Run all the tests in TESTDIR.  By default, I am using pytest, but you can fix this by changing TEST_RUNNER.
@@ -42,6 +41,9 @@ Examples:
     $ make test args="-v"
     $ make test args="-x --pdb --ff"
 ```
+
+### coverage
+It does the same as test and additionally creates a terminal report with lines that missed coverage.  You can pass additional arguments to coverage use the `arg` command line just like in test.  To permanently change argument, modify the _COVERAGE_ argument in Makefile.
 
 ### clean clean-all
 The target clean removes everything but environment and clean-all removes the environment.
@@ -66,3 +68,8 @@ The authentication file I use for uploading modules to PyPI.  Of course I have s
 ### gitignore
 Here is the `.gitignore` file I use.  I am not sure about the source of inspiration, but I have been using this for quite awhile.
 
+## Testing Makefile
+To keep me from breaking functionality, I needed some testing scripts.  I am including there to test
+  * _environment.sh_: verify proper virtualenv creation by target **env**
+  * _checking.sh_: verify static code analysis by target **check**
+  * _coverage.sh_: verify testing and coverage working by target **coverage**

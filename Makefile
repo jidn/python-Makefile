@@ -5,21 +5,18 @@
 # This also works with Travis CI
 #
 PROJECT :=
-PACKAGE :=
-# Replace 'requirements.txt' with another filename if needed.
-REQUIRE_TXT := $(wildcard requirements.txt)
-# Directory with all the tests
+PACKAGE := ./
 TESTDIR := tests
-TESTREQ_TXT := $(wildcard $(TESTDIR)/requirements.txt)
+# Defaults- override by putting on commandline:  python=python2.7
+python = python
+REQUIRE = requirements.txt
 ##############################################################################
 # Python settings
 ifdef TRAVIS
 	ENV = $(VIRTUAL_ENV)
 else
-	ENV := env
+	ENV := .env
 endif
-# default if not given on command line
-python = python
 # System paths
 BIN := $(ENV)/bin
 OPEN := xdg-open
@@ -34,23 +31,20 @@ COVERAGE := $(BIN)/coverage
 TEST_RUNNER := $(BIN)/py.test
 
 # Project settings
+REQUIREMENTS := $(shell find ./ -name $(REQUIRE))
 SETUP_PY := $(wildcard setup.py)
-SOURCES := $(shell find $(PACKAGE) -name '*.py')
-TESTS :=   $(shell find $(TESTDIR) -name '*.py')
+SOURCES := $(shell find $(PACKAGE) -name $(ENV) -prune -o -name '*.py' -print )
+#TESTS :=   $(shell find $(TESTDIR) -name '*.py')
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
 # Flags for environment/tools
-FLAG_CI := $(ENV)/.depends-ci
-FLAG_DEV := $(ENV)/.depends-dev
-LOG_REQ := $(ENV)/.requirements.txt
-LOG_TEST_REQ := $(ENV)/.requirements-test.txt
+FLAG_CI := $(ENV)/.ci.log
+FLAG_DEV := $(ENV)/.dev.log
+LOG_REQUIRE := $(ENV)/requirements.log
 
-# Main Targets ###############################################################
+### Main Targets #############################################################
 .PHONY: all env ci help
-all: $(ENV)/.default-target
-$(ENV)/.default-target: env $(SETUP_PY) $(SOURCES)
-	$(MAKE) -s test
-	@touch $@
+all: env check test
 
 # Target for Travis
 ci: test
@@ -61,100 +55,83 @@ help:
 	@echo "check      Run style checks"
 	@echo "test       TEST_RUNNER on '$(TESTDIR)'"
 	@echo "             args=\"-x --pdb --ff\"  optional arguments"
-	@echo "coverage   Get coverage information"
+	@echo "coverage   Get coverage information, optional 'args' like test"
 	@echo "upload     Upload package to PyPI"
 	@echo "clean clean-all  Clean up and clean up removing virtualenv"
 
-# Environment Installation ###################################################
-env: $(PIP) $(LOG_REQ) $(ENV)/.setup.py
+### Environment Installation #################################################
+env: $(PIP) $(LOG_REQUIRE)
 $(PIP):
-	$(SYS_VIRTUALENV) --python $(python) $(ENV)
-	@$(MAKE) -s $(ENV)/.setup.py
+	test -d $(ENV) || $(SYS_VIRTUALENV) --python $(python) $(ENV)
 
-$(LOG_REQ): $(REQUIRE_TXT)
-ifneq ($(REQUIRE_TXT),)
-	$(PIP) install --upgrade -r $(REQUIRE_TXT) | tee -a $(LOG_REQ)
-	# env requirements hook
-	$(info Upgrade or install $(REQUIRE_TXT) complete.)
-endif
-	@touch $@
+# $(LOG_REQUIRE): $(wildcard $(REQUIRE))
+# 	$(PIP) install -r $(REQUIRE) | tee -a $(LOG_REQUIRE)
+# 	$(info Upgrade or install $(REQUIRE) complete.)
+$(LOG_REQUIRE): $(REQUIREMENTS)
+	for f in $(REQUIREMENTS); do \
+	  $(PIP) install -r $$f | tee -a $(LOG_REQUIRE); \
+	done
+	touch $@
 
-$(ENV)/.setup.py: $(SETUP_PY)
-ifneq ($(SETUP_PY),)
-	$(PIP) install -e .
-endif
-	@touch $@
 
 ### Static Analysis & Travis CI ##############################################
 .PHONY: check flake8 pep257
-
-PEP8_IGNORED := E501,E123,D104,D203
+PEP8_IGNORE := E501,E123
+PEP257_IGNORE := D104,D203
 check: flake8 pep257
 
-$(FLAG_CI): env
-	$(PIP) install --upgrade flake8 pep257
-	@touch $@  # flag to indicate dependencies are installed
+$(FLAG_CI):
+	$(PIP) install --upgrade flake8 pep257 > $(FLAG_CI)
 
-$(FLAG_DEV): env
-	$(PIP) install --upgrade wheel  # pygments wheel
-	@touch $@  # flag to indicate dependencies are installed
+$(FLAG_DEV):
+	$(PIP) install --upgrade wheel > $(FLAG_DEV)
 
-flake8: $(FLAG_CI)
-	$(FLAKE8) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --ignore=$(PEP8_IGNORED)
+flake8: env $(FLAG_CI)
+	$(FLAKE8) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --exclude $(ENV) --ignore=$(PEP8_IGNORE)
 
-pep257: $(FLAG_CI)
-	$(PEP257) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --ignore=$(PEP8_IGNORED)
+pep257: env $(FLAG_CI)
+	$(PEP257) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --match-dir=^$(ENV) --ignore=$(PEP257_IGNORE)
 
 ### Testing ##################################################################
 .PHONY: test coverage
 
-COVERAGE := --cov $(PACKAGE) \
-			 --cov-report term-missing \
-			 --cov-report html
+COVERAGE := --cov-report term-missing --cov=$(PACKAGE)
+#			 --cov-report html:cov-html
 
-test: env $(LOG_TEST_REQ)
-	@$(MAKE) -s .clean-test
-	$(TEST_RUNNER) $(TESTDIR) $(args)
-
-$(LOG_TEST_REQ): $(TESTREQ_TXT)
-ifneq ($(TESTREQ_TXT),)
-	$(PIP) install --upgrade -r $(TESTREQ_TXT) | tee -a $(LOG_TEST_REQ)
-	@echo "Testing requirements installed."
-endif
-	@touch $@
+test: env
+	$(TEST_RUNNER) $(args) $(TESTDIR)
 
 coverage:
-	$(TEST_RUNNER) $(args) $(TESTDIR) $(COVERAGE)
-	$(COVERAGE) html
-	$(OPEN) htmlcov/index.html
+	$(TEST_RUNNER) $(args) $(COVERAGE) $(TESTDIR)
+#	$(COVERAGE) html
+#	$(OPEN) htmlcov/index.html
 
-# Cleanup ####################################################################
-.PHONY: clean clean-env clean-all .clean-build .clean-test .clean-dist
+### Cleanup ##################################################################
+.PHONY: clean clean-env clean-all clean-build clean-test clean-dist
 
-clean: .clean-dist .clean-test .clean-build
-	-@rm -rf $(ALL)
+clean: clean-dist clean-test clean-build
 
 clean-env: clean
 	-@rm -rf $(ENV)
 
 clean-all: clean clean-env
 
-.clean-build:
+clean-build:
 #	@find -name $(PACKAGE).c -delete
 	@find $(PACKAGE) -name '*.pyc' -delete
-	@find $(TESTDIR) -name '*.pyc' -delete
 	@find $(PACKAGE) -name '__pycache__' -delete
-	@find $(TESTDIR) -name '__pycache__' -delete
-	@rm -rf $(EGG_INFO)
-	@rm -rf __pycache__
+	@find $(TESTDIR) -name '*.pyc' -delete 2>/dev/null || true
+	@find $(TESTDIR) -name '__pycache__' -delete 2>/dev/null || true
+	-@rm -rf $(EGG_INFO)
+	-@rm -rf __pycache__
 
-.clean-test:
-	@rm -rf .coverage
+clean-test:
+	-@rm -rf .coverage
 
-.clean-dist:
-	@rm -rf dist build
+clean-dist:
+	-@rm -rf dist build
 
-# Release ####################################################################
+### Release ##################################################################
 # For more information on creating packages for PyPI see the writeup at
 # http://peterdowns.com/posts/first-time-with-pypi.html
 .PHONY: authors register dist upload .git-no-changes
@@ -184,7 +161,7 @@ upload: .git-no-changes register
 		exit -1;                                  \
 	fi;
 
-# System Installation ########################################################
+### System Installation ######################################################
 .PHONY: develop install download
 # Is this section really needed?
 
