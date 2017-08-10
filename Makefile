@@ -25,7 +25,7 @@ endif
 PIP := $(BIN)/pip
 PYTHON := $(BIN)/$(python)
 FLAKE8 := $(BIN)/flake8
-PEP257 := $(BIN)/pep257
+PEP257 := $(BIN)/pydocstyle
 TEST_RUNNER := $(BIN)/py.test
 
 # Project settings
@@ -79,7 +79,7 @@ PEP257_IGNORE := D104,D203
 check: flake8 pep257
 
 $(FLAG_CI):
-	$(PIP) install --upgrade flake8 pep257 > $(FLAG_CI)
+	$(PIP) install --upgrade flake8 pydocstyle > $(FLAG_CI)
 
 $(FLAG_DEV):
 	$(PIP) install --upgrade wheel > $(FLAG_DEV)

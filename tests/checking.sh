@@ -13,7 +13,9 @@ make env >> log.txt
 ### Create a source file
 ( cat <<'EOF'
 def func():
+  """Simple test function."""
   print("Hello world", file=sys.null)
+  return True
 EOF
 ) > foo.py
 
