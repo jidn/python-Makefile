@@ -27,7 +27,6 @@ PIP := $(BIN)/pip
 PYTHON := $(BIN)/$(python)
 FLAKE8 := $(BIN)/flake8
 PEP257 := $(BIN)/pep257
-COVERAGE := $(BIN)/coverage
 TEST_RUNNER := $(BIN)/py.test
 
 # Project settings
