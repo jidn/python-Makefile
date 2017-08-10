@@ -4,6 +4,7 @@
 # 
 # This also works with Travis CI
 #
+ENV := .env
 PROJECT :=
 PACKAGE := ./
 TESTDIR := tests
@@ -12,15 +13,13 @@ python = python
 REQUIRE = requirements.txt
 ##############################################################################
 # Python settings
-ifdef TRAVIS
-	ENV = $(VIRTUAL_ENV)
-else
-	ENV := .env
-endif
 # System paths
 BIN := $(ENV)/bin
 OPEN := xdg-open
 SYS_VIRTUALENV := virtualenv
+ifdef TRAVIS
+	ENV = $(VIRTUAL_ENV)
+endif
 
 # virtualenv executables
 PIP := $(BIN)/pip
