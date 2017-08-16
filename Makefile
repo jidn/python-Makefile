@@ -36,7 +36,6 @@ SOURCES := $(shell find $(PACKAGE) -name $(ENV) -prune -o -name '*.py' -print )
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
 # Flags for environment/tools
-FLAG_CI := $(ENV)/.ci.log
 FLAG_DEV := $(ENV)/.dev.log
 LOG_REQUIRE := $(ENV)/requirements.log
 
@@ -78,16 +77,16 @@ PEP8_IGNORE := E501,E123
 PEP257_IGNORE := D104,D203
 check: flake8 pep257
 
-$(FLAG_CI):
-	$(PIP) install --upgrade flake8 pydocstyle > $(FLAG_CI)
+$(FLAKE8):
+	$(PIP) install --upgrade flake8 pydocstyle | tee -a $(LOG_REQUIRE)
 
 $(FLAG_DEV):
 	$(PIP) install --upgrade wheel > $(FLAG_DEV)
 
-flake8: env $(FLAG_CI)
+flake8: env $(FLAKE8)
 	$(FLAKE8) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --exclude $(ENV) --ignore=$(PEP8_IGNORE)
 
-pep257: env $(FLAG_CI)
+pep257: env $(FLAKE8)
 	$(PEP257) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --match-dir=^$(ENV) --ignore=$(PEP257_IGNORE)
 
 ### Testing ##################################################################
