@@ -1,39 +1,44 @@
 #!/usr/bin/env sh
 . ./helper.sh
-TESTDIR=test-env
+ISOLATION=test-env
+TESTDIR=tests
 
-mkdir "$TESTDIR"; pushd "$TESTDIR" >/dev/null
-msg "Check flake8 for syntax and style"
-make clean-env > log.txt
-make env >> log.txt
-[ -d "$ENV" ] || err "Environment directory should exist."
-[ -e ${ENV}/requirements.log ] || err "Requirements log is missing."
-[ ! -s ${ENV}/requirements.log ] || err "Requirements log is not empty "
+function test_run() {
+  # $1 Source directory
+  # $2 Test directory
+  msg "Check flake8 for syntax and style"
+  make clean-env > log.txt
+  make_env_and_test log.txt
 
-### Create a source file
-( cat <<'EOF'
-def func():
-  """Simple test function."""
-  print("Hello world", file=sys.null)
-  return True
-EOF
-) > foo.py
+  create_source_file "$1"
+  make check >> log.txt 2>/dev/null
+  grep -qs E111 log.txt || err "Indentation not multiple of 4"
 
-make check >> log.txt 2>/dev/null
-grep -qs E111 log.txt || err "Indentation not multiple of 4"
-grep -qs F821 log.txt || err "Undefined module sys"
+  msg "Check pep257 Docstring"
+  mkdir ${2}
+  create_test_file "$1" "$2"
+  make pep257  > log.txt 2>/dev/null
+  grep -qs foo  log.txt || err "Missing foo.py in top directory"
+  grep -qs D100 log.txt || err "Expecting Missing module docstring error"
+  grep -qs D103 log.txt || err "Expecting Missing function docstring error"
+}
 
-msg "Check pep257 Docstring"
-mkdir tests
-( cat <<'EOF'
-def test_bar():
-    print("I am bar.")
-EOF
-) > tests/bar.py
-
-make pep257  2> log.txt
-grep -qs foo log.txt || err "Missing foo.py in top directory"
-grep -qs bar log.txt || err "Missing bar.py in test directory"
-
+magenta "## Checking static analysic"
+rm -rf "$ISOLATION"
+msg "Single source file without src directory"
+mkdir "$ISOLATION"; pushd "$ISOLATION" >/dev/null
+copy_makefile
+test_run '' "${TESTDIR}"
 popd >/dev/null
-rm -rf "$TESTDIR"
+rm -rf "$ISOLATION"
+
+msg "Source directory"
+mkdir "$ISOLATION"; pushd "$ISOLATION" >/dev/null
+copy_makefile
+mkdir "src"
+makefile_change_PACKAGE src
+test_run "src" "${TESTDIR}"
+popd >/dev/null
+rm -rf "$ISOLATION"
+
+
