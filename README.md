@@ -10,8 +10,8 @@ curl https://raw.githubusercontent.com/jidn/python-Makefile/master/Makefile > Ma
 
 and make the following changes:
 
+ * _PACKAGE_ := myproject/  or empty if python files are in the same directory
  * _PROJECT_ := MyProject
- * _PACKAGE_ := myproject/  or myproject.py
  * _REQUIRE_ := The file with required packages; defaults to requirements.txt
  * _TESTDIR_ := Default is current directory 'tests'
 
@@ -43,23 +43,68 @@ Examples:
 ```
 
 ### coverage
-It does the same as test and additionally creates a terminal report with lines that missed coverage.  You can pass additional arguments to coverage use the `arg` command line just like in test.  To permanently change argument, modify the _COVERAGE_ argument in Makefile.
+It does the same as test and additionally creates a terminal report with lines that missed coverage.  You can pass additional arguments to coverage use the `arg` command line just like in test.  To permanently change argument, modify the `COVER_ARG` argument in Makefile.
+
+If `PACKAGE` is empty, python files are in the same directory as Makefile, the you should use a coveragerc file to omit the ENV directory from the coverage search.  Copy the following to `.coveragerc` (replace ${ENV} with the correct directory) and append "--cov-config .coveragerc" to `COVER_ARG` .
+
+```
+[run]
+omit=${ENV}
+```
 
 ### clean clean-all
 The target clean removes everything but environment and clean-all removes the environment.
 
 ### coverage
-Check the coverage and show the text output.  It also creates the HTML output.
+Check the coverage and show the text output.
 
 ### upload
 Package the module and upload it PyPI.
+
+## Testing Makefile
+To keep me from breaking functionality, I needed some testing scripts.  These tests both instances where source files are in the same directory as the Make file and where source files are in a seperate directory.
+
+  * _all.sh_: Run all the tests.
+  * _environment.sh_: verify proper virtualenv creation by target **env**
+  * _checking.sh_: verify static code analysis by target **check**
+  * _coverage.sh_: verify testing and coverage working by target **coverage**
+  * _travis.sh_: verify it works properly under Travis-ci.org environment
+
+```
+    $ ./all.sh
+    ## ALL tests
+    ## Environment
+    Create environment without requirements.txt
+    Create environment with requirements.txt
+    Repeated 'make env' does nothing
+    Changed requirements.txt triggers adds package
+    Create environment with commandline REQUIRE=
+    ## Checking static analysic
+    Single source file without src directory
+    Check flake8 for syntax and style
+    Check pep257 Docstring
+    Source directory
+    Check flake8 for syntax and style
+    Check pep257 Docstring
+    ## Testing and coverage
+    Single source file without src directory
+    Check testing and coverage
+    Run tests
+    Run coverage
+    Use a source directory
+    Check testing and coverage
+    Run tests
+    Run coverage
+    ## TRAVIS virtual environment
+    Success
+```
 
 ## Other files
 
 ### travis.yml
 A simple `.travis.yml` for python versions 2.7, 3.2, 3.3, and 3.4 in continuous integration testing.  I am not using 3.5 as wheel is giving me some problems when compiling dependencies.
 
-### create_Makefile.sh
+### create\_Makefile.sh
 It appears I am finding bugs as I go along and use this for existing projects.  I make the fixes for the project, port it back here, then copy the new Makefile from this project back to the existing project.  This helps automate the task while also showing how to make changes to the Makefile.
 
 ### .pypirc
@@ -67,9 +112,3 @@ The authentication file I use for uploading modules to PyPI.  Of course I have s
 
 ### gitignore
 Here is the `.gitignore` file I use.  I am not sure about the source of inspiration, but I have been using this for quite awhile.
-
-## Testing Makefile
-To keep me from breaking functionality, I needed some testing scripts.  I am including there to test
-  * _environment.sh_: verify proper virtualenv creation by target **env**
-  * _checking.sh_: verify static code analysis by target **check**
-  * _coverage.sh_: verify testing and coverage working by target **coverage**

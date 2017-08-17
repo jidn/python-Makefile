@@ -34,7 +34,7 @@ make env >> log.txt
 grep -qs "$PKG" $PIP_LOG || err "'$PKG' missing from log"
 ${ENV}/bin/python -c "import $PKG" || err "unable to import '$PKG'"
 
-msg "Create envirnoment with commandline REQUIRE="
+msg "Create environment with commandline REQUIRE="
 PKG="six"
 make clean-env >log.txt
 echo "$PKG" >my_requirements.txt
