@@ -37,6 +37,7 @@ ${ENV}/bin/python -c "import $PKG" || err "unable to import '$PKG'"
 msg "Create environment with commandline REQUIRE="
 PKG="six"
 make clean-env >log.txt
+[ -f .*.log ] && err "Requirements install log not cleaned"
 echo "$PKG" >my_requirements.txt
 make env REQUIRE=my_requirements.txt >> log.txt
 [ -d "$ENV" ] || err "Environment directory should exist."
