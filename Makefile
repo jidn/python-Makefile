@@ -118,6 +118,7 @@ clean: clean-dist clean-test clean-build
 
 clean-env: clean
 	-@rm -rf $(ENV)
+	-@rm -rf $(LOG_REQUIRE)
 	-@rm -rf .tox
 
 clean-all: clean clean-env
@@ -131,6 +132,7 @@ clean-build:
 	-@rm -rf __pycache__
 
 clean-test:
+	-@rm -rf .cache
 	-@rm -rf .coverage
 
 clean-dist:
