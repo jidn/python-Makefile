@@ -13,8 +13,8 @@ function test_run() {
   # $2 Test directory
   msg "Check testing and coverage"
   make clean-env > log.txt
-  make_env_and_test log.txt
 
+  echo "six" > requirements.txt
   create_source_file "$1"
   mkdir "$2"
   create_test_file "$1" "$2"
@@ -24,10 +24,13 @@ function test_run() {
   make test args="-v" >> log.txt 2>/dev/null
   grep -q "success PASSED" log.txt || err "Unable to pass test_success"
   grep -q "failure FAILED" log.txt || err "Expected failure missing"
+  grep -q "six" log.txt || err "make test should install requirements"
 
   msg "Run coverage"
+  make clean-env > log.txt
   make coverage args="--cov-config ${COVRC}" >> log.txt 2>/dev/null
   grep "foo.py" log.txt | grep -q "100%" || err "Expected 100% coverage"
+  grep -q "six" log.txt || err "make coverage should install requirements"
 }
 
 msg "Single source file without src directory"

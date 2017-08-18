@@ -31,7 +31,7 @@ FLAKE8 := $(BIN)/flake8
 PEP257 := $(BIN)/pydocstyle
 COVERAGE := $(BIN)/coverage
 TEST_RUNNER := $(BIN)/py.test
-$(TEST_RUNNER): $(PIP)
+$(TEST_RUNNER): env
 	$(PIP) install pytest | tee -a $(LOG_REQUIRE)
 
 # Project settings
@@ -102,7 +102,7 @@ coverage: $(COVERAGE)
 #      | append "--cov-config .coveragerc" to COVER_ARG
 	$(TEST_RUNNER) $(args) $(COVER_ARG) $(TESTDIR)
 
-$(COVERAGE): $(PIP)
+$(COVERAGE): env
 	$(PIP) install pytest-cov | tee -a $(LOG_REQUIRE)
 
 tox: $(TOX)
