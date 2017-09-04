@@ -103,10 +103,7 @@ To keep me from breaking functionality, I needed some testing scripts.  These te
 ## Other files
 
 ### travis.yml
-A simple `.travis.yml` for python versions 2.7, 3.2, 3.3, and 3.4 in continuous integration testing.  I am not using 3.5 as wheel is giving me some problems when compiling dependencies.
-
-### create\_Makefile.sh
-It appears I am finding bugs as I go along and use this for existing projects.  I make the fixes for the project, port it back here, then copy the new Makefile from this project back to the existing project.  This helps automate the task while also showing how to make changes to the Makefile.
+A simple `.travis.yml` for python versions 2.7, 3.3, 3.4, and 3.6 in continuous integration testing.  I am not using 3.5 as wheel is giving me some problems when compiling dependencies.  It is already set to use [coveralls](coveralls.io), so go to coveralls.io and hook up your project and travis-ci will send the run information for coverage analysis.
 
 ### .pypirc
 The authentication file I use for uploading modules to PyPI.  Of course I have stripted out the username and passwords.
