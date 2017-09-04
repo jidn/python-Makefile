@@ -18,7 +18,7 @@ and make the following changes:
 ## Targets
 
 ### env
-Create the virtual environment in `.env` directory within the current directory.  No stomping on other virtual environments in some global directory.  Lets keep everything local to make environment debugging easier.  This is also where all the requirements are installed.
+Create the virtual environment in `.env` directory within the current directory.  No stomping on other virtual environments in some global directory.  Let's keep everything local to make environment debugging easier.  This is also where all the requirements are installed.
 
 You can specify the python interpreter version by adding python=PYTHON_EXE on the command-line.  This defaults to the current python interpreter.
 
@@ -43,9 +43,9 @@ Examples:
 ```
 
 ### coverage
-It does the same as test and additionally creates a terminal report with lines that missed coverage.  You can pass additional arguments to coverage use the `arg` command line just like in test.  To permanently change argument, modify the `COVER_ARG` argument in Makefile.
+It runs your tests observing if they execute the entire code base.  It then creates a terminal report with lines that missed coverage.  You can pass additional arguments to coverage use the `arg` command line just like in test.  To permanently change argument, modify the `COVER_ARG` argument in Makefile.
 
-If `PACKAGE` is empty, python files are in the same directory as Makefile, the you should use a coveragerc file to omit the ENV directory from the coverage search.  Makefile will create a `.coveragerc` file for you in this case and then stop make execution.  Rerun make it will find the `.coveragerc` and append "--cov-config .coveragerc" to `COVER_ARG`.
+If `PACKAGE` is empty, python files are in the same directory as Makefile, you should use a coverage config file to omit the ENV directory from the coverage search.  In this case, Makefile will create a `.coveragerc` file for you and then stop make execution.  When you rerun make it will find the `.coveragerc` and append "--cov-config .coveragerc" to `COVER_ARG`.
 
 Here is the created `.coveragerc` with a placeholder for your environment directory.
 
@@ -57,14 +57,11 @@ omit=${ENV}/*
 ### clean clean-all
 The target clean removes everything but environment and clean-all removes the environment.
 
-### coverage
-Check the coverage and show the text output.
-
 ### upload
 Package the module and upload it PyPI.
 
 ## Testing Makefile
-To keep me from breaking functionality, I needed some testing scripts.  These tests both instances where source files are in the same directory as the Make file and where source files are in a seperate directory.
+To keep me from breaking functionality, I needed some testing scripts.  These tests both instances where source files are in the same directory as the Make file and where source files are in a separate directory.
 
   * _all.sh_: Run all the tests.
   * _environment.sh_: verify proper virtualenv creation by target **env**
@@ -81,7 +78,7 @@ To keep me from breaking functionality, I needed some testing scripts.  These te
     Repeated 'make env' does nothing
     Changed requirements.txt triggers adds package
     Create environment with commandline REQUIRE=
-    ## Checking static analysic
+    ## Checking static analysis
     Single source file without src directory
     Check flake8 for syntax and style
     Check pep257 Docstring
