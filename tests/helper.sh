@@ -64,15 +64,6 @@ EOF
 ) > $2/test_1.py
 }
 
-function create_coveragerc() {
-  # $1 coveragerc file
-( cat <<EOF
-[run]
-omit = ${ENV}/
-EOF
-) > "$1"
-}
-
 function makefile_change_PACKAGE() {
   # $1 source directory
   [ -z "$1" ] && 1='.'

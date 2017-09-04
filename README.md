@@ -45,11 +45,13 @@ Examples:
 ### coverage
 It does the same as test and additionally creates a terminal report with lines that missed coverage.  You can pass additional arguments to coverage use the `arg` command line just like in test.  To permanently change argument, modify the `COVER_ARG` argument in Makefile.
 
-If `PACKAGE` is empty, python files are in the same directory as Makefile, the you should use a coveragerc file to omit the ENV directory from the coverage search.  Copy the following to `.coveragerc` (replace ${ENV} with the correct directory) and append "--cov-config .coveragerc" to `COVER_ARG` .
+If `PACKAGE` is empty, python files are in the same directory as Makefile, the you should use a coveragerc file to omit the ENV directory from the coverage search.  Makefile will create a `.coveragerc` file for you in this case and then stop make execution.  Rerun make it will find the `.coveragerc` and append "--cov-config .coveragerc" to `COVER_ARG`.
+
+Here is the created `.coveragerc` with a placeholder for your environment directory.
 
 ```
 [run]
-omit=${ENV}
+omit=${ENV}/*
 ```
 
 ### clean clean-all
@@ -88,11 +90,10 @@ To keep me from breaking functionality, I needed some testing scripts.  These te
     Check pep257 Docstring
     ## Testing and coverage
     Single source file without src directory
-    Check testing and coverage
+    Check for auto .coveragerc creation
     Run tests
     Run coverage
     Use a source directory
-    Check testing and coverage
     Run tests
     Run coverage
     ## TRAVIS virtual environment
