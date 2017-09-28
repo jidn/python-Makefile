@@ -8,7 +8,7 @@
 PACKAGE =
 TESTDIR = tests
 PROJECT :=
-ENV = .env
+ENV = venv
 # Override by putting on commandline:  python=python2.7
 python = python
 REQUIRE = requirements.txt
