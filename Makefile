@@ -27,7 +27,7 @@ SYS_VIRTUALENV := virtualenv
 PIP := $(BIN)/pip
 TOX := $(BIN)/tox
 PYTHON := $(BIN)/$(python)
-FLAKE8 := $(BIN)/flake8
+ANALIZE := $(BIN)/pylint
 PEP257 := $(BIN)/pydocstyle
 COVERAGE := $(BIN)/coverage
 TEST_RUNNER := $(BIN)/py.test
@@ -40,6 +40,7 @@ REQUIREMENTS := $(shell find ./ -name $(REQUIRE))
 SETUP_PY := $(wildcard setup.py)
 SOURCES := $(or $(PACKAGE), $(wildcard *.py))
 COVERAGE_RC := $(wildcard default.coveragerc)
+ANALIZE_RC := $(wildcard default.pylintrc)
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 COVER_ARG := --cov-report term-missing --cov=$(PKGDIR) \
 	$(if $(wildcard default.coveragerc), --cov-config default.coveragerc)
@@ -77,17 +78,20 @@ help:
 	@echo "clean clean-all  Clean up and clean up removing virtualenv"
 
 ### Static Analysis & Travis CI ##############################################
-.PHONY: check flake8 pep257
-check: flake8 pep257
+.PHONY: check pylint pep257
+check: pylint pep257
 
-$(FLAKE8): $(PIP)
-	$(PIP) install --upgrade flake8 pydocstyle | tee -a $(LOG_REQUIRE)
+$(ANALIZE): $(PIP)
+	$(PIP) install --upgrade pylint pydocstyle | tee -a $(LOG_REQUIRE)
 
-flake8: $(FLAKE8)
-	$(FLAKE8) $(or $(PACKAGE), $(SOURCES)) $(TESTDIR) --ignore=$(PEP8_IGNORE)
+pylint: $(ANALIZE) $(ANALIZE_RC)
+	$(ANALIZE) $(SOURCES) $(TESTDIR) --ignore=$(PEP8_IGNORE)
 
-pep257: $(FLAKE8)
-	$(PEP257) $(or $(PACKAGE), $(SOURCES)) $(ARGS) --ignore=$(PEP257_IGNORE)
+pep257: $(ANALIZE)
+	$(PEP257) $(SOURCES) $(ARGS) --ignore=$(PEP257_IGNORE)
+
+$(ANALIZE_RC):
+	$(warning Missing project pylint configuration file default.pylintrc)
 
 ### Testing ##################################################################
 .PHONY: test coverage tox
