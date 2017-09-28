@@ -38,10 +38,11 @@ $(TEST_RUNNER): env
 PKGDIR := $(or $(PACKAGE), ./)
 REQUIREMENTS := $(shell find ./ -name $(REQUIRE))
 SETUP_PY := $(wildcard setup.py)
-SOURCES := $(wildcard *.py)
+SOURCES := $(or $(PACKAGE), $(wildcard *.py))
+COVERAGE_RC := $(wildcard default.coveragerc)
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 COVER_ARG := --cov-report term-missing --cov=$(PKGDIR) \
-	$(if $(wildcard .coveragerc), --cov-config .coveragerc)
+	$(if $(wildcard default.coveragerc), --cov-config default.coveragerc)
 
 # Flags for environment/tools
 LOG_REQUIRE := .requirements.log
@@ -94,18 +95,18 @@ pep257: $(FLAKE8)
 test: $(TEST_RUNNER)
 	$(TEST_RUNNER) $(args) $(TESTDIR)
 
-coverage: $(COVERAGE) .coveragerc
+coverage: $(COVERAGE) default.coveragerc
 	$(TEST_RUNNER) $(args) $(COVER_ARG) $(TESTDIR)
 
-.coveragerc:
+default.coveragerc:
 ifeq ($(PKGDIR),./)
-ifeq (,$(wildcard $(.coveragerc)))
+ifeq (,$(wildcard $(default.coveragerc)))
 	# If PKGDIR is root directory, ie code is not in its own directory
 	# then you should use a .coveragerc file to remove the ENV directory
 	# from the coverage search.  I'll auto generate one for you.
 	$(info Rerun make to discover autocreated .coveragerc)
-	@echo -e "[run]\nomit=$(ENV)/*" > .coveragerc
-	@cat .coveragerc
+	@echo -e "[run]\nomit=$(ENV)/*" > default.coveragerc
+	@cat default.coveragerc
 	@exit 68
 endif
 endif
