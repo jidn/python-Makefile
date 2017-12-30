@@ -57,7 +57,7 @@ ci: test
 
 env: $(PIP) $(LOG_REQUIRE)
 $(PIP):
-	$(info "Environment is $(ENV)")
+	$(info Environment is $(ENV))
 	test -d $(ENV) || $(SYS_VIRTUALENV) --python $(python) $(ENV)
 
 $(LOG_REQUIRE): $(REQUIREMENTS)

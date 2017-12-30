@@ -3,8 +3,7 @@
 *.log
 
 # Virtual Environments
-.env/
-env/
+[v]env/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

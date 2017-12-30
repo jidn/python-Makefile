@@ -1,6 +1,5 @@
 # For source directory should be '' if in project root
 
-ENV=.env
 function err() {
   tput setaf 1
   echo -n "[$?] "
@@ -26,6 +25,7 @@ function green() {
 
 function copy_makefile() {
   cp ../../Makefile .
+  ENV=`make -np -f Makefile | sed '/^ENV = */!d; s///;q'`
 }
 
 function make_env_and_test() {

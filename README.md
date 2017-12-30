@@ -18,7 +18,7 @@ and make the following changes:
 ## Targets
 
 ### env
-Create the virtual environment in `.env` directory within the current directory.  No stomping on other virtual environments in some global directory.  Let's keep everything local to make environment debugging easier.  This is also where all the requirements are installed.
+Create the virtual environment in `venv` directory within the current directory.  No stomping on other virtual environments in some global directory.  Let's keep everything local to make environment debugging easier.  This is also where all the requirements are installed.
 
 You can specify the python interpreter version by adding python=PYTHON_EXE on the command-line.  This defaults to the current python interpreter.
 
