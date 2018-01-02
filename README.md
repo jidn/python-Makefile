@@ -10,7 +10,7 @@ curl https://raw.githubusercontent.com/jidn/python-Makefile/master/Makefile > Ma
 
 and make the following changes:
 
- * _PACKAGE_ := myproject/  or empty if python files are in the same directory
+ * _PACKAGE_ := myproject/  or empty if python files are in the same directory.
  * _PROJECT_ := MyProject
  * _REQUIRE_ := The file with required packages; defaults to requirements.txt
  * _TESTDIR_ := Default is current directory 'tests'
@@ -29,10 +29,10 @@ Examples:
 ```
 
 ### check
-Static code analysis using flake8, ignoring the virtual environment and test directory.
+Static code analysis using pylint, ignoring the virtual environment.
 
 ### test
-Run all the tests in TESTDIR.  By default, I am using pytest, but you can fix this by changing TEST_RUNNER.
+Run all the tests in TESTDIR.  By default, I am using pytest, but you can fix this by changing TEST_RUNNER and TEST_RUNNER_PKGS.
 
 You can also pass arguments to your TEST_RUNNER by adding `args=" ... "` on the command line.
 
@@ -45,9 +45,9 @@ Examples:
 ### coverage
 It runs your tests observing if they execute the entire code base.  It then creates a terminal report with lines that missed coverage.  You can pass additional arguments to coverage use the `arg` command line just like in test.  To permanently change argument, modify the `COVER_ARG` argument in Makefile.
 
-If `PACKAGE` is empty, python files are in the same directory as Makefile, you should use a coverage config file to omit the ENV directory from the coverage search.  In this case, Makefile will create a `.coveragerc` file for you and then stop make execution.  When you rerun make it will find the `.coveragerc` and append "--cov-config .coveragerc" to `COVER_ARG`.
+If `PACKAGE` is empty, python files are in the same directory as Makefile, you should use a coverage config file to omit the virtual environment directory from the coverage search.  In this case, Makefile will create a `default.coveragerc` file for you and then stop make execution.  When you rerun make it will find the `default.coveragerc` and append "--cov-config default.coveragerc" to `COVER_ARG`.
 
-Here is the created `.coveragerc` with a placeholder for your environment directory.
+Here is the created `default.coveragerc` with a placeholder for your environment directory.
 
 ```
 [run]
@@ -68,34 +68,6 @@ To keep me from breaking functionality, I needed some testing scripts.  These te
   * _checking.sh_: verify static code analysis by target **check**
   * _coverage.sh_: verify testing and coverage working by target **coverage**
   * _travis.sh_: verify it works properly under Travis-ci.org environment
-
-```
-    $ ./all.sh
-    ## ALL tests
-    ## Environment
-    Create environment without requirements.txt
-    Create environment with requirements.txt
-    Repeated 'make env' does nothing
-    Changed requirements.txt triggers adds package
-    Create environment with commandline REQUIRE=
-    ## Checking static analysis
-    Single source file without src directory
-    Check flake8 for syntax and style
-    Check pep257 Docstring
-    Source directory
-    Check flake8 for syntax and style
-    Check pep257 Docstring
-    ## Testing and coverage
-    Single source file without src directory
-    Check for auto .coveragerc creation
-    Run tests
-    Run coverage
-    Use a source directory
-    Run tests
-    Run coverage
-    ## TRAVIS virtual environment
-    Success
-```
 
 ## Other files
 

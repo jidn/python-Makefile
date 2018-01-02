@@ -1,44 +1,43 @@
 #!/usr/bin/env sh
 . ./helper.sh
-ISOLATION=test-env
-TESTDIR=tests
 
 function test_run() {
   # $1 Source directory
-  # $2 Test directory
-  msg "Check flake8 for syntax and style"
   make clean-env > log.txt
-  make_env_and_test log.txt
+  # Generate generic RC file
+  make env >> log.txt
+  $PIP install "$ANALIZE_BIN" >> log.txt
+  $ANALIZE --generate-rcfile > pylintrc
+  # Now clean up, call check and see if env created properly
+  make clean-env
 
   create_source_file "$1"
-  make check >> log.txt 2>/dev/null
-  grep -qs E111 log.txt || err "Indentation not multiple of 4"
+  make check > log.txt 2>/dev/null
+  grep -qs 'unused-argument' log.txt || err "Didn't find unused-argument"
+  pip_reinstall_on_make check
 
-  msg "Check pep257 Docstring"
-  mkdir ${2}
-  create_test_file "$1" "$2"
-  make pep257  > log.txt 2>/dev/null
-  grep -qs foo  log.txt || err "Missing foo.py in top directory"
-  grep -qs D100 log.txt || err "Expecting Missing module docstring error"
-  grep -qs D103 log.txt || err "Expecting Missing function docstring error"
+  mkdir $TESTDIR
+  create_test_file "$1" "$TESTDIR"
+  make docstring  > log.txt 2>/dev/null
+  grep -qs D413 log.txt || err "Expecting missing line after 'Returns'"
 }
 
 magenta "## Checking static analysic"
-rm -rf "$ISOLATION"
+start_isolation
+ANALIZE=$(makefile_var '^ANALIZE := ')
+ANALIZE_BIN=$(basename "$ANALIZE")
+PIP=$(makefile_var '^PIP := ')
+TESTDIR=$(makefile_var "^TESTDIR = ")
 msg "Single source file without src directory"
-mkdir "$ISOLATION"; pushd "$ISOLATION" >/dev/null
-copy_makefile
-test_run '' "${TESTDIR}"
-popd >/dev/null
-rm -rf "$ISOLATION"
+
+test_run ''
+end_isolation
 
 msg "Source directory"
-mkdir "$ISOLATION"; pushd "$ISOLATION" >/dev/null
-copy_makefile
+start_isolation
 mkdir "src"
 makefile_change_PACKAGE src
-test_run "src" "${TESTDIR}"
-popd >/dev/null
-rm -rf "$ISOLATION"
+test_run "src"
+end_isolation
 
 

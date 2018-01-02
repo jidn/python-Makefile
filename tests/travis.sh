@@ -1,22 +1,16 @@
 #!/usr/bin/env sh
 . ./helper.sh
-ISOLATE=test-env
 ENV=travis
 
-
 magenta "## TRAVIS virtual environment"
-rm -rf $ISOLATE
-mkdir "$ISOLATE"; pushd "$ISOLATE" > /dev/null
-copy_makefile
+start_isolation
 # Creating environment as if travis-ci.org
 make env ENV=$ENV > log.txt
-
+grep -q "$ENV/bin/pip" log.txt || err "Unable to create $ENV virtual environment"
+# Activate Travis-CI environment
 export TRAVIS=1
-source ${ENV}/bin/activate
-echo "$VIRTUAL_ENV" | grep -q "/travis$" || err "\$VIRTUAL_ENV is $VIRTUAL_ENV"
+. $ENV/bin/activate
 
-create_source_file ''
-make -n pep257 >> log.txt
-grep -q "travis/bin/pydocstyle" log.txt || err "Not using travis virtualenv"
-popd >/dev/null
-rm -rf $ISOLATE
+# See if Makefile trys to install TEST_RUNNER from virtual environment
+make -n test | grep -q "/$ENV/bin/pip" || err "Not using virtual environment"
+end_isolation
